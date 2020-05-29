@@ -372,6 +372,18 @@ class _SettingsState extends State<Settings> {
             ),
           ),
           editBreakTimer(),
+          ListTile(
+            title: Center(
+              child: Text(
+                'You can long press to skip the timer',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

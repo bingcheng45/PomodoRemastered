@@ -220,11 +220,20 @@ class _HomeState extends State<Home> {
                     _btmTextVisible = !_btmTextVisible;
                     print('delayed $_btmTextVisible');
                     if (globals.index == 0) {
-                      pomodoroText = 'Let\'s do it!';
-                      breakText = 'Take a short break!';
+                      if(globals.isRunning == false){
+                        pomodoroText = 'Tap to begin';
+                      }else{
+                        pomodoroText = 'Let\'s do it!';
+                      }
+                      
                     } else {
-                      breakText = 'Enjoy your well deserved break!';
-                      pomodoroText = 'Tap to begin';
+                      if(globals.isRunning == false){
+                        breakText = 'Take a short break!';
+                      }else{
+                        breakText = 'Enjoy your well deserved break!';
+                      }
+                      
+                      
                     }
                   });
                 });
