@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pomodororemastered/global.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart'; //TODO: do settings pages and im done betch
 import 'package:flutter/cupertino.dart';
@@ -20,6 +21,9 @@ class _SettingsState extends State<Settings> {
   final mKeyW = 'minute_key_work';
   int wHour, wMinute;
   double _opacity = 0;
+
+  final cKey = 'completed_pomodoros';
+  int completed = 0;
 
   //break timer
   Duration breakTimer;
@@ -46,6 +50,20 @@ class _SettingsState extends State<Settings> {
         breakTimer = Duration(hours: bHour, minutes: bMinute);
       });
     });
+    _getCompletedNumber().then((value) {
+      setState(() {
+        completed = value;
+        print('completed pomod: $completed');
+      });
+    });
+
+    
+  }
+
+  Future<int> _getCompletedNumber() async {
+    final prefs = await SharedPreferences.getInstance();
+    int num = prefs.getInt(cKey) ?? 0;
+    return num;
   }
 
   void _setWorkTimer(hour, minutes) async {
@@ -89,7 +107,7 @@ class _SettingsState extends State<Settings> {
                 CupertinoTimerPicker(
                   initialTimerDuration:
                       Duration(hours: wHour, minutes: wMinute),
-                  minuteInterval: 5,
+                  minuteInterval: 1, //TODO: change back to 5
                   backgroundColor: Colors.white,
                   mode: CupertinoTimerPickerMode.hm,
                   onTimerDurationChanged: (value) {
@@ -339,6 +357,11 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
+    _getCompletedNumber().then((value) {
+      setState(() {
+        completed = value;
+      });
+    });
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(color: Colors.white),
@@ -379,6 +402,30 @@ class _SettingsState extends State<Settings> {
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            title: Center(
+              child: Text(
+                'Completed Pomodoros :',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            title: Center(
+              child: Text(
+                completed.toString(),
+                style: TextStyle(
+                  fontSize: 60,
+                  color: Colors.orange,
                   fontWeight: FontWeight.bold,
                 ),
               ),

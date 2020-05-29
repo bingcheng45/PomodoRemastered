@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pomodororemastered/global.dart' as globals;
@@ -5,6 +6,7 @@ import 'package:rect_getter/rect_getter.dart';
 import 'package:pomodororemastered/settings.dart';
 import 'package:quiver/async.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -29,6 +31,33 @@ class _HomeState extends State<Home> {
   final mKeyW = 'minute_key_work';
   final hKeyB = 'hour_key_break';
   final mKeyB = 'minute_key_break';
+  final cKey = 'completed_pomodoros';
+
+  List workList = [
+    'I work hard because I love my work. ~ Bill Gates, Microsoft co-founder',
+    'I do not know anyone who has got to the top without hard work. That is the recipe. It will not always get you to the top, but should get you pretty near. ~ Margaret Thatcher, Former UK Prime Minister',
+    'Success seems to be connected with action. Successful people keep moving. They make mistakes, but they don’t quit. ~ Conrad Hilton, hotelier and business magnate',
+    'Success is no accident. It is hard work, perseverance, learning, studying, sacrifice and most of all, love of what you are doing or learning to do. ~ Pele, Brazilian soccer player',
+    'The successful warrior is the average man, with laser-like focus. ~ Bruce Lee, martial artist and movie star',
+    'If you really look closely, most overnight successes took a long time. ~ Steve Jobs, co-Founder of Apple Inc.',
+    'Talent is cheaper than table salt. What separates the talented individual from the successful one is hard work. ~ Stephen King, American author',
+    'The only difference between success and failure is the ability to take action. ~ Alexander Graham Bell, Inventor',
+    'Luck is a dividend of sweat. The more you sweat, the luckier you get. ~ Ray Kroc, American fast food tycoon',
+    'It’s not about money or connection — it’s the willingness to outwork and outlearn everyone. ~ Mark Cuban, American investor',
+    'Doing the best at this moment puts you in the best place for the next moment. ~ Oprah Winfrey, media mogul',
+    'I think that my biggest attribute to any success that I have had is hard work. There really is no substitute for working hard. ~ Maria Bartiromo, television journalist and author',
+    'If you love your work, you’ll be out there every day trying to do it the best you possibly can, and pretty soon everybody around will catch the passion from you – like a fever. ~ Sam Walton, founder of Walmart',
+    'Nothing is particularly hard if you divide it into small jobs. ~ Henry Ford, American industrialist',
+    'Work hard, have fun, make history. ~ Jeff Bezos, Amazon founder                     ',
+    'I never took a day off in my 20s. Not one. ~ Bill Gates, Microsoft co-founder',
+    'Hard work beats talent if talent doesn’t work hard. ~ Tim Notke, basketball coach',
+    'Men die of boredom, psychological conflict and disease. They do not die of hard work. ~ David Ogilvy, advertising business tycoon',
+    'The only place where success comes before work is in the dictionary. ~ Vidal Sassoon, hairdressing business tycoon',
+    'No matter how hard you work, someone else is working harder. ~ Elon Musk, entrepreneur',
+    'Success isn\'t always about greatness. It\'s about consistency. Consistent hard work leads to success. Greatness will come. ~ Dwayne “The Rock” Johnson, actor',
+    'People who say it cannot be done should not interrupt those who are doing it. ~ George Bernard Shaw, playwright',
+    'You are your greatest asset. Put your time, effort and money into training ~ Tom Hopkins, sales leader',
+  ];
 
   @override
   void initState() {
@@ -53,6 +82,11 @@ class _HomeState extends State<Home> {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
     );
+  }
+
+  String generateWorkText() {
+    var rng = Random();
+    return workList[rng.nextInt(workList.length - 1)];
   }
 
   Future<List<int>> _getWorkTimer() async {
@@ -160,9 +194,22 @@ class _HomeState extends State<Home> {
     timerObj = sub;
 
     sub.onDone(() {
+      if (globals.index == 0) {
+        _updateCompleted();
+      }
       onFinished();
       sub.cancel();
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
+      );
     });
+  }
+
+  void _updateCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    int num = prefs.getInt(cKey) ?? 0;
+    prefs.setInt(cKey, num + 1);
+    print('updating num $num');
   }
 
   void onFinished() {
@@ -176,9 +223,11 @@ class _HomeState extends State<Home> {
     if (globals.index == 0) {
       //pomodoro timer
       setupTimer(globals.globalTimer);
+      pomodoroText = 'Tap to begin';
     } else {
       //break timer
       setupTimer(globals.globalBreakTimer);
+      breakText = 'Take a short break!';
     }
   }
 
@@ -215,25 +264,23 @@ class _HomeState extends State<Home> {
                 globals.isRunning = true;
                 _btmTextVisible = !_btmTextVisible;
                 print('non delayed $_btmTextVisible');
+                pomodoroText = '';
+                breakText = '';
                 Future.delayed(const Duration(milliseconds: 1000), () {
                   setState(() {
                     _btmTextVisible = !_btmTextVisible;
-                    print('delayed $_btmTextVisible');
                     if (globals.index == 0) {
-                      if(globals.isRunning == false){
+                      if (globals.isRunning == false) {
                         pomodoroText = 'Tap to begin';
-                      }else{
-                        pomodoroText = 'Let\'s do it!';
+                      } else {
+                        pomodoroText = generateWorkText();
                       }
-                      
                     } else {
-                      if(globals.isRunning == false){
+                      if (globals.isRunning == false) {
                         breakText = 'Take a short break!';
-                      }else{
+                      } else {
                         breakText = 'Enjoy your well deserved break!';
                       }
-                      
-                      
                     }
                   });
                 });
@@ -250,8 +297,8 @@ class _HomeState extends State<Home> {
               children: <Widget>[
                 AnimatedContainer(
                   padding: firstTap
-                      ? EdgeInsets.only(top: height * 0.3)
-                      : EdgeInsets.only(top: height * 0.1),
+                      ? EdgeInsets.only(top: height * 0.29)
+                      : EdgeInsets.only(top: height * 0.09),
                   duration: Duration(seconds: 2),
                   curve: Curves.easeInOut,
                   child: FittedBox(
@@ -260,13 +307,11 @@ class _HomeState extends State<Home> {
                 ),
                 AnimatedContainer(
                   padding: firstTap
-                      ? EdgeInsets.only(top: height * 0.3)
-                      : EdgeInsets.only(top: height * 0.5),
+                      ? EdgeInsets.only(top: height * 0.29)
+                      : EdgeInsets.only(top: height * 0.49),
                   duration: Duration(seconds: 2),
                   curve: Curves.easeInOut,
-                  child: FittedBox(
-                    child: bottomText(context),
-                  ),
+                  child: bottomText(context),
                 ),
               ],
             ),
@@ -297,22 +342,45 @@ class _HomeState extends State<Home> {
   }
 
   Widget bottomText(context) {
-    double paddingW = MediaQuery.of(context).size.width * 0.1;
+    //double paddingW = MediaQuery.of(context).size.width * 0.1;
     //double paddingH = MediaQuery.of(context).size.height * paddingheightBtm;
     return AnimatedOpacity(
       opacity: _btmTextVisible ? 1.0 : 0.0,
       duration: Duration(milliseconds: 1000),
+      //curve: Curves.easeInOut,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: paddingW),
+        padding: EdgeInsets.symmetric(horizontal: 10),
         child: Opacity(
-          opacity: 0.5,
-          child: Text(
-            (globals.index == 0) ? pomodoroText : breakText,
-            style: TextStyle(
-              color: Theme.of(context).textSelectionColor,
-              fontSize: 54,
-            ),
-          ),
+          opacity: 0.7,
+          child: (globals.isRunning == false)
+              ? AutoSizeText(
+                  (globals.index == 0) ? pomodoroText : breakText,
+                  style: TextStyle(
+                    color: Theme.of(context).textSelectionColor,
+                    fontSize: 50,
+                  ),
+                  maxLines: 1,
+                )
+              : AutoSizeText(
+                  (globals.index == 0) ? pomodoroText : breakText,
+                  style: TextStyle(
+                    color: Theme.of(context).textSelectionColor,
+                    fontSize: 50,
+                  ),
+                  maxLines: 1,
+                  wrapWords: false,
+                  textAlign: TextAlign.center,
+                  overflowReplacement: AutoSizeText(
+                    (globals.index == 0) ? pomodoroText : breakText,
+                    style: TextStyle(
+                      color: Theme.of(context).textSelectionColor,
+                      fontSize: 50,
+                    ),
+                    maxLines: 3,
+                    wrapWords: false,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
         ),
       ),
     );
