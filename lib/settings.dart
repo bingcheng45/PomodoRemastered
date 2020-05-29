@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pomodororemastered/global.dart' as globals;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/cupertino.dart';
 
 class Settings extends StatefulWidget {
   @override

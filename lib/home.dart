@@ -26,6 +26,36 @@ class _HomeState extends State<Home> {
   CountdownTimer countDownTimer;
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //globals.globalTimer = _totalSeconds; //set global timer to shared pref timer
+    setupTimer(globals.globalTimer); //worktime
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
+    );
+  }
+
+  void setupTimer(int totalSeconds) {
+    _start = totalSeconds;
+    _current = totalSeconds;
+    minute = getMinute(totalSeconds);
+    seconds = getSeconds(totalSeconds);
+  }
+
+  int getMinute(int current) {
+    return _current ~/ 60;
+  }
+
+  int getSeconds(int current) {
+    return current % 60;
+  }
+
+  String beautifyNumber(int num) {
+    return num < 10 ? '0$num' : '$num';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: true,
@@ -87,9 +117,26 @@ class _HomeState extends State<Home> {
     timerObj = sub;
 
     sub.onDone(() {
-      //onFinished();
+      onFinished();
       sub.cancel();
     });
+  }
+
+  void onFinished() {
+    print("Done");
+    setState(() {
+      globals.isRunning = false;
+      switchBGColor();
+      firstTap = false;
+    });
+
+    if (globals.index == 0) {
+      //pomodoro timer
+      setupTimer(globals.globalTimer);
+    } else {
+      //break timer
+      setupTimer(globals.globalBreakTimer);
+    }
   }
 
   //timer object end
@@ -120,7 +167,7 @@ class _HomeState extends State<Home> {
             if (globals.isRunning == false) {
               //_showNotification();
               //refreshTotalSeconds();
-              //startTimer();
+              startTimer();
               setState(() {
                 globals.isRunning = true;
                 _btmTextVisible = !_btmTextVisible;
@@ -177,10 +224,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  String beautifyNumber(int num) {
-    return num < 10 ? '0$num' : '$num';
-  }
-
   Widget topText(context) {
     double paddingW = MediaQuery.of(context).size.width * 0.1;
     //double paddingH = MediaQuery.of(context).size.height * paddingheightTop;
@@ -189,7 +232,7 @@ class _HomeState extends State<Home> {
       child: Opacity(
         opacity: 1,
         child: Text(
-          '${beautifyNumber(minute)} : ${beautifyNumber(seconds)}',
+          '${beautifyNumber(getMinute(minute))} : ${beautifyNumber(getSeconds(seconds))}',
           style: TextStyle(
             color: Theme.of(context).textSelectionColor,
             fontSize: 78,
@@ -247,7 +290,7 @@ class _HomeState extends State<Home> {
     return RectGetter(
       key: rectGetterKey,
       child: Positioned(
-        top: MediaQuery.of(context).padding.top,
+        //top: MediaQuery.of(context).padding.top,
         right: 0,
         child: FloatingActionButton(
             backgroundColor: Colors.transparent,
