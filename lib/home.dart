@@ -4,6 +4,7 @@ import 'package:pomodororemastered/global.dart' as globals;
 import 'package:rect_getter/rect_getter.dart';
 import 'package:pomodororemastered/settings.dart';
 import 'package:quiver/async.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -24,23 +25,65 @@ class _HomeState extends State<Home> {
   int _current = 0;
   bool firstTap = false;
   CountdownTimer countDownTimer;
+  final hKeyW = 'hour_key_work';
+  final mKeyW = 'minute_key_work';
+  final hKeyB = 'hour_key_break';
+  final mKeyB = 'minute_key_break';
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     //globals.globalTimer = _totalSeconds; //set global timer to shared pref timer
-    setupTimer(globals.globalTimer); //worktime
+    _getWorkTimer().then((list) {
+      setState(() {
+        globals.globalTimer =
+            60 * (list[0] * 60 + list[1]); //hours and minutes to seconds
+        setupTimer(globals.globalTimer);
+      });
+    });
+    _getBreakTimer().then((list) {
+      setState(() {
+        globals.globalBreakTimer =
+            60 * (list[0] * 60 + list[1]); //hours and minutes to seconds
+        setupBreakTimer(globals.globalBreakTimer);
+      });
+    });
+    //worktime
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
     );
   }
 
+  Future<List<int>> _getWorkTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    int hour = prefs.getInt(hKeyW) ?? 0;
+    int minute = prefs.getInt(mKeyW) ?? 25;
+    return [hour, minute];
+  }
+
+  Future<List<int>> _getBreakTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    int hour = prefs.getInt(hKeyB) ?? 0;
+    int minute = prefs.getInt(mKeyB) ?? 5;
+    return [hour, minute];
+  }
+
   void setupTimer(int totalSeconds) {
-    _start = totalSeconds;
-    _current = totalSeconds;
-    minute = getMinute(totalSeconds);
-    seconds = getSeconds(totalSeconds);
+    setState(() {
+      _start = totalSeconds;
+      _current = totalSeconds;
+      minute = getMinute(totalSeconds);
+      seconds = getSeconds(totalSeconds);
+    });
+  }
+
+  void setupBreakTimer(int totalSeconds) {
+    if (globals.index == 0) {
+      //do nth
+    } else {
+      setupTimer(totalSeconds);
+    }
   }
 
   int getMinute(int current) {
@@ -152,7 +195,7 @@ class _HomeState extends State<Home> {
     );
     return GestureDetector(
       onLongPressUp: () {
-        //onFinished();
+        onFinished();
         try {
           timerObj.cancel();
         } catch (err) {
@@ -180,7 +223,7 @@ class _HomeState extends State<Home> {
                       pomodoroText = 'Let\'s do it!';
                       breakText = 'Take a short break!';
                     } else {
-                      breakText = 'Go scroll Facebook';
+                      breakText = 'Enjoy your well deserved break!';
                       pomodoroText = 'Tap to begin';
                     }
                   });
@@ -281,7 +324,7 @@ class _HomeState extends State<Home> {
   void _goToNextPage() {
     Navigator.of(context)
         .push(MaterialPageRoute(
-          builder: (context) => Settings(),
+          builder: (context) => Settings(setupTimer, setupBreakTimer),
         ))
         .then((_) => setState(() => rect = null));
   }
