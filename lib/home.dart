@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -15,7 +16,7 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with TickerProviderStateMixin {
   final Duration animationDuration = Duration(milliseconds: 300);
   final Duration delay = Duration(milliseconds: 300);
   GlobalKey rectGetterKey = RectGetter.createGlobalKey();
@@ -34,6 +35,15 @@ class _HomeState extends State<Home> {
   final hKeyB = 'hour_key_break';
   final mKeyB = 'minute_key_break';
   final cKey = 'completed_pomodoros';
+  bool quater1Opacity = false;
+  bool quater2Opacity = false;
+  bool quater3Opacity = false;
+  bool quater4Opacity = false;
+  double imageSize = 10;
+  bool explode = false;
+  double explodeWidth = 10;
+  double explodeHeight = 10;
+  double explodePadding = 16;
 
   List workList = [
     'I work hard because I love my work. ~ Bill Gates, Microsoft co-founder',
@@ -74,7 +84,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _demoNotification2(int totalSeconds, String text) async {
     var scheduledNotificationDateTime =
-        DateTime.now().add(Duration(seconds: 5));
+        DateTime.now().add(Duration(seconds: totalSeconds));
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'channel_ID', 'channel name', 'channel description',
         importance: Importance.Max,
@@ -111,7 +121,6 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     //globals.globalTimer = _totalSeconds; //set global timer to shared pref timer
     _getWorkTimer().then((list) {
@@ -234,7 +243,35 @@ class _HomeState extends State<Home> {
             inkWellButton(context),
             settingBtn(),
             _ripple(),
+            longbreakCounterAnimation(),
+            explodeOnFourthCompleted(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget explodeOnFourthCompleted() {
+    //TODO: Explode animation
+    return Positioned(
+      left: 0,
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.only(left: explodePadding, top: explodePadding),
+          child: AnimatedOpacity(
+            duration: Duration(milliseconds: 1000),
+            opacity: explode ? 1.0 : 0.0,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 1000),
+              curve: Curves.fastOutSlowIn,
+              width: explodeWidth,
+              height: explodeHeight,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(500),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -268,7 +305,7 @@ class _HomeState extends State<Home> {
   //start the countdown timer
   void startTimer() {
     countDownTimer = new CountdownTimer(
-      new Duration(seconds: 5), //_start
+      new Duration(seconds: 10), //TODO: change timer settings _start
       new Duration(seconds: 1),
     );
 
@@ -286,10 +323,11 @@ class _HomeState extends State<Home> {
     sub.onDone(() {
       if (globals.index == 0) {
         _updateCompleted();
+        setState(() {
+          globals.longBreakCounter++;
+        });
       }
-      setState(() {
-        globals.longBreakCounter++;
-      });
+
       onFinished();
       sub.cancel();
       SystemChrome.setSystemUIOverlayStyle(
@@ -372,6 +410,7 @@ class _HomeState extends State<Home> {
               startTimer();
               setState(() {
                 globals.isRunning = true;
+                updateQuaterVisibility(); //TODO: make the quater have animations
                 _btmTextVisible = !_btmTextVisible;
                 print('non delayed $_btmTextVisible');
                 pomodoroText = '';
@@ -429,6 +468,98 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
+  }
+
+  void explodeNow() {
+    //TODO: explodenow
+    setState(() {
+      explodeWidth = MediaQuery.of(context).size.height * 0.5;
+      explodeHeight = MediaQuery.of(context).size.height * 0.5;
+      explodePadding = MediaQuery.of(context).size.width * 0.1;
+      explode = true;
+    });
+    Timer(Duration(milliseconds: 500), () {
+      setState(() {
+        explode = false;
+      });
+    });
+    Timer(Duration(milliseconds: 1500), () {
+      setState(() {
+        explodeWidth = 10;
+        explodeHeight = 10;
+        explodePadding = 16;
+      });
+    });
+  }
+
+  void hideQuaterImages() {
+    setState(() {
+      quater1Opacity = false;
+      quater2Opacity = false;
+      quater3Opacity = false;
+      quater4Opacity = false;
+    });
+  }
+
+  //TODO: update quater visibility
+  void updateQuaterVisibility() {
+    setState(() {
+      Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+        if (!globals.isRunning) {
+          timer.cancel();
+          if (globals.longBreakCounter % 4 == 0 &&
+              globals.longBreakCounter != 0) {
+            //this is the 4th and completed pomodoro
+            hideQuaterImages();
+            explodeNow(); //TODO remove this
+          } else {
+            hideQuaterImages();
+          }
+          print('inside cancel $quater1Opacity');
+        } else {
+          if (globals.longBreakCounter % 4 == 0) {
+            //working on the first pomodoro
+            setState(() {
+              quater1Opacity = !quater1Opacity;
+              quater2Opacity = false;
+              quater3Opacity = false;
+              quater4Opacity = false;
+            });
+          } else if ((globals.longBreakCounter) % 4 == 1) {
+            //working on the second pomodoro, finished the first
+            setState(() {
+              quater1Opacity = true;
+              quater2Opacity = !quater2Opacity;
+              quater3Opacity = false;
+              quater4Opacity = false;
+            });
+          } else if ((globals.longBreakCounter) % 4 == 2) {
+            //working on the third pomodoro, finished the second
+            setState(() {
+              quater1Opacity = true;
+              quater2Opacity = true;
+              quater3Opacity = !quater3Opacity;
+              quater4Opacity = false;
+            });
+          } else if ((globals.longBreakCounter) % 4 == 3) {
+            //working on the fourth pomodoro, finished the third
+            setState(() {
+              quater1Opacity = true;
+              quater2Opacity = true;
+              quater3Opacity = true;
+              quater4Opacity = !quater4Opacity;
+            });
+          }
+
+          // quater1Opacity = !quater1Opacity;
+          // quater2Opacity = !quater2Opacity;
+          // quater3Opacity = !quater3Opacity;
+          // quater4Opacity = !quater4Opacity;
+          print(
+              'outside cancel $quater1Opacity long break is ${globals.longBreakCounter}');
+        }
+      });
+    });
   }
 
   Widget topText(context) {
@@ -521,6 +652,85 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+
+  Widget longbreakCounterAnimation() {
+    return Positioned(
+      left: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: AnimatedSize(
+          vsync: this,
+          duration: Duration(milliseconds: 100),
+          child: Container(
+            height: imageSize * 4,
+            width: imageSize * 4,
+            child: Column(
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    //TODO: quater images
+                    AnimatedOpacity(
+                      opacity: quater4Opacity ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 500),
+                      child: AnimatedSize(
+                        vsync: this,
+                        duration: Duration(milliseconds: 500),
+                        child: Image.asset('images/quater4.png',
+                            height: imageSize,
+                            width: imageSize,
+                            color: Colors.white),
+                      ),
+                    ),
+                    AnimatedOpacity(
+                      opacity: quater1Opacity ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 500),
+                      child: AnimatedSize(
+                        vsync: this,
+                        duration: Duration(milliseconds: 500),
+                        child: Image.asset('images/quater1.png',
+                            height: imageSize,
+                            width: imageSize,
+                            color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    AnimatedOpacity(
+                      opacity: quater3Opacity ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 500),
+                      child: AnimatedSize(
+                        vsync: this,
+                        duration: Duration(milliseconds: 500),
+                        child: Image.asset('images/quater3.png',
+                            height: imageSize,
+                            width: imageSize,
+                            color: Colors.white),
+                      ),
+                    ),
+                    AnimatedOpacity(
+                      opacity: quater2Opacity ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 500),
+                      child: AnimatedSize(
+                        vsync: this,
+                        duration: Duration(milliseconds: 500),
+                        child: Image.asset('images/quater2.png',
+                            height: imageSize,
+                            width: imageSize,
+                            color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  //Image.asset('images/logo.png', height: 24, width: 24,),
 
   Widget _ripple() {
     if (rect == null) {
