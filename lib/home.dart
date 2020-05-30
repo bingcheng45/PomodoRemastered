@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:pomodororemastered/global.dart' as globals;
 import 'package:rect_getter/rect_getter.dart';
@@ -7,6 +8,7 @@ import 'package:pomodororemastered/settings.dart';
 import 'package:quiver/async.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -59,6 +61,50 @@ class _HomeState extends State<Home> {
     'You are your greatest asset. Put your time, effort and money into training ~ Tom Hopkins, sales leader',
   ];
 
+  //notification
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  var initializationSettingsAndroid;
+  var initializationSettingsIOS;
+  var initializationSettings;
+
+  void _showNotification(int totalSeconds, String text) async {
+    await _demoNotification2(totalSeconds, text);
+  }
+
+  Future<void> _demoNotification2(int totalSeconds, String text) async {
+    var scheduledNotificationDateTime =
+        DateTime.now().add(Duration(seconds: totalSeconds));
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'channel_ID', 'channel name', 'channel description',
+        importance: Importance.Max,
+        priority: Priority.High,
+        ticker: 'test ticker');
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.schedule(0, 'Simple Pomodoro', text,
+        scheduledNotificationDateTime, platformChannelSpecifics);
+  }
+
+  // Future<void> _demoNotification() async {
+  //   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+  //       'channel_ID', 'channel name', 'channel description',
+  //       importance: Importance.Max,
+  //       priority: Priority.High,
+  //       ticker: 'test ticker');
+
+  //   var iOSChannelSpecifics = IOSNotificationDetails();
+  //   var platformChannelSpecifics = NotificationDetails(
+  //       androidPlatformChannelSpecifics, iOSChannelSpecifics);
+
+  //   await flutterLocalNotificationsPlugin.show(0, 'Hello, buddy',
+  //       'A message from flutter buddy', platformChannelSpecifics,
+  //       payload: 'test oayload');
+  // }
+
+  //end of notification
+
   @override
   void initState() {
     // TODO: implement initState
@@ -82,6 +128,46 @@ class _HomeState extends State<Home> {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
     );
+
+    initializationSettingsAndroid =
+        AndroidInitializationSettings('ic_launcher');
+    initializationSettingsIOS = new IOSInitializationSettings(
+        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+    initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: onSelectNotification);
+
+    //Timer.periodic(Duration(seconds: 1), (Timer t) => _setTime());//runs forever
+  }
+
+  Future onSelectNotification(String payload) async {
+    if (payload != null) {
+      debugPrint('Notification payload: $payload');
+    }
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => SecondRoute()));
+  }
+
+  Future onDidReceiveLocalNotification(
+      int id, String title, String body, String payload) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) => CupertinoAlertDialog(
+              title: Text(title),
+              content: Text(body),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  child: Text('Ok'),
+                  onPressed: () async {
+                    Navigator.of(context, rootNavigator: true).pop();
+                    await Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => SecondRoute()));
+                  },
+                )
+              ],
+            ));
   }
 
   String generateWorkText() {
@@ -212,8 +298,9 @@ class _HomeState extends State<Home> {
     print('updating num $num');
   }
 
-  void onFinished() {
+  void onFinished() async {
     print("Done");
+
     setState(() {
       globals.isRunning = false;
       switchBGColor();
@@ -246,6 +333,9 @@ class _HomeState extends State<Home> {
       onLongPressUp: () {
         onFinished();
         try {
+          Future.delayed(const Duration(milliseconds: 100), () async {
+            await flutterLocalNotificationsPlugin.cancelAll();
+          });
           timerObj.cancel();
         } catch (err) {
           print(err.toString());
@@ -257,8 +347,11 @@ class _HomeState extends State<Home> {
           splashColor: Colors.white54,
           onTap: () {
             if (globals.isRunning == false) {
-              //_showNotification();
-              //refreshTotalSeconds();
+              if (globals.index == 0) {
+                _showNotification(globals.globalTimer, 'Time for your break.');
+              } else {
+                _showNotification(globals.globalBreakTimer, 'Break is over!');
+              }
               startTimer();
               setState(() {
                 globals.isRunning = true;
@@ -440,4 +533,24 @@ class _HomeState extends State<Home> {
     );
   }
   //settings end
+}
+
+class SecondRoute extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    Navigator.pop(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('AlertPage'),
+      ),
+      body: Center(
+        child: RaisedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('go back...'),
+        ),
+      ),
+    );
+  }
 }

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pomodororemastered/global.dart' as globals;
@@ -31,7 +32,11 @@ class _SettingsState extends State<Settings> {
   final hKeyB = 'hour_key_break';
   final mKeyB = 'minute_key_break';
   int bHour, bMinute;
-  double _opacityB = 0;
+  double _opacityB = 1;
+  String breakText = 'You cannot set timer to 0 hours and 0 minute!';
+  Color breakTextColor = Colors.red;
+  bool isZero = false;
+  //'After 4 pomodoro it will be a long break that is ${getMinute(globals.globalBreakTimer * 3)} minute.';
 
   @override
   void initState() {
@@ -56,8 +61,10 @@ class _SettingsState extends State<Settings> {
         print('completed pomod: $completed');
       });
     });
+  }
 
-    
+  int getMinute(int current) {
+    return current ~/ 60;
   }
 
   Future<int> _getCompletedNumber() async {
@@ -97,14 +104,13 @@ class _SettingsState extends State<Settings> {
       contentPadding: EdgeInsets.all(0),
       title: Text("Edit work timer"),
       backgroundColor: Colors.white,
-      content: FittedBox(
-        //fit: BoxFit.none,
-        child: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                CupertinoTimerPicker(
+      content: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              FittedBox(
+                child: CupertinoTimerPicker(
                   initialTimerDuration:
                       Duration(hours: wHour, minutes: wMinute),
                   minuteInterval: 1, //TODO: change back to 5
@@ -121,20 +127,21 @@ class _SettingsState extends State<Settings> {
                     });
                   },
                 ),
-                Opacity(
-                  opacity: _opacity,
-                  child: Container(
-                    padding: EdgeInsets.only(top: 10, bottom: 0),
-                    child: Text(
-                      'You cannot set timer to 0 hours and 0 minute!',
-                      style: TextStyle(color: Colors.red),
-                    ),
+              ),
+              Opacity(
+                opacity: _opacity,
+                child: Container(
+                  padding:
+                      EdgeInsets.only(top: 10, bottom: 0, left: 15, right: 15),
+                  child: Text(
+                    'You cannot set timer to 0 hours and 0 minute!',
+                    style: TextStyle(color: Colors.red),
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
       actions: <Widget>[
         FlatButton(
@@ -160,14 +167,13 @@ class _SettingsState extends State<Settings> {
       contentPadding: EdgeInsets.all(0),
       title: Text("Edit break timer"),
       backgroundColor: Colors.white,
-      content: FittedBox(
-        //fit: BoxFit.none,
-        child: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                CupertinoTimerPicker(
+      content: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              FittedBox(
+                child: CupertinoTimerPicker(
                   initialTimerDuration:
                       Duration(hours: bHour, minutes: bMinute),
                   minuteInterval: 1,
@@ -177,27 +183,38 @@ class _SettingsState extends State<Settings> {
                     setState(() {
                       breakTimerTemp = value;
                       if (value.inHours == 0 && (value.inMinutes % 60) == 0) {
-                        _opacityB = 1;
+                        //_opacityB = 1;
+                        isZero = true;
+                        breakText =
+                            'You cannot set timer to 0 hours and 0 minute!';
+                        breakTextColor = Colors.red;
                       } else {
-                        _opacityB = 0;
+                        //_opacityB = 0;
+                        isZero = false;
+                        breakText =
+                            'After 4 pomodoro it will be a long break that is ${(value.inSeconds * 3) ~/ 3600}hour ${beautifyNumber((value.inMinutes * 3) % 60)}minute.';
+                        breakTextColor = Colors.black;
                       }
                     });
                   },
                 ),
-                Opacity(
-                  opacity: _opacityB,
-                  child: Container(
-                    padding: EdgeInsets.only(top: 10, bottom: 0),
-                    child: Text(
-                      'You cannot set timer to 0 hours and 0 minute!',
-                      style: TextStyle(color: Colors.red),
-                    ),
+              ),
+              Opacity(
+                opacity: _opacityB,
+                child: Container(
+                  padding:
+                      EdgeInsets.only(top: 10, bottom: 0, left: 15, right: 15),
+                  child: AutoSizeText(
+                    breakText,
+                    style: TextStyle(color: breakTextColor, fontSize: 20),
+                    maxLines: 2,
+                    maxFontSize: 14,
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
       actions: <Widget>[
         FlatButton(
@@ -217,6 +234,10 @@ class _SettingsState extends State<Settings> {
     );
   }
 
+  String beautifyNumber(int num) {
+    return num < 10 ? '0$num' : '$num';
+  }
+
   void saveWorkTime(context) {
     setState(() {
       if (_opacity == 1) {
@@ -227,7 +248,9 @@ class _SettingsState extends State<Settings> {
         wMinute = workTimer.inMinutes % 60;
         _setWorkTimer(wHour, wMinute);
         globals.globalTimer = workTimer.inSeconds;
-        widget.setupTimer(globals.globalTimer);
+        if (globals.isRunning == false) {
+          widget.setupTimer(globals.globalTimer);
+        }
         print("hopefully change the timer by now : " +
             globals.globalTimer.toString());
         Navigator.of(context).pop();
@@ -238,7 +261,7 @@ class _SettingsState extends State<Settings> {
   //break timer
   void saveBreakTime(context) {
     setState(() {
-      if (_opacityB == 1) {
+      if (isZero) {
         //do nothing
       } else {
         breakTimer = breakTimerTemp;
