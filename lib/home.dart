@@ -74,11 +74,15 @@ class _HomeState extends State<Home> {
 
   Future<void> _demoNotification2(int totalSeconds, String text) async {
     var scheduledNotificationDateTime =
-        DateTime.now().add(Duration(seconds: totalSeconds));
+        DateTime.now().add(Duration(seconds: 5));
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'channel_ID', 'channel name', 'channel description',
         importance: Importance.Max,
         priority: Priority.High,
+        icon: null,
+        color: Colors.red,
+        enableVibration: true,
+        playSound: true,
         ticker: 'test ticker');
     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
     NotificationDetails platformChannelSpecifics = NotificationDetails(
@@ -130,7 +134,7 @@ class _HomeState extends State<Home> {
     );
 
     initializationSettingsAndroid =
-        AndroidInitializationSettings('ic_launcher');
+        AndroidInitializationSettings('notification_logo');
     initializationSettingsIOS = new IOSInitializationSettings(
         onDidReceiveLocalNotification: onDidReceiveLocalNotification);
     initializationSettings = new InitializationSettings(
@@ -264,7 +268,7 @@ class _HomeState extends State<Home> {
   //start the countdown timer
   void startTimer() {
     countDownTimer = new CountdownTimer(
-      new Duration(seconds: _start),
+      new Duration(seconds: 5), //_start
       new Duration(seconds: 1),
     );
 
@@ -283,6 +287,9 @@ class _HomeState extends State<Home> {
       if (globals.index == 0) {
         _updateCompleted();
       }
+      setState(() {
+        globals.longBreakCounter++;
+      });
       onFinished();
       sub.cancel();
       SystemChrome.setSystemUIOverlayStyle(
@@ -295,6 +302,7 @@ class _HomeState extends State<Home> {
     final prefs = await SharedPreferences.getInstance();
     int num = prefs.getInt(cKey) ?? 0;
     prefs.setInt(cKey, num + 1);
+
     print('updating num $num');
   }
 
@@ -313,8 +321,17 @@ class _HomeState extends State<Home> {
       pomodoroText = 'Tap to begin';
     } else {
       //break timer
-      setupTimer(globals.globalBreakTimer);
-      breakText = 'Take a short break!';
+      if (globals.longBreakCounter % 4 == 0 && globals.longBreakCounter != 0) {
+        setState(() {
+          breakText = 'Let\'s enjoy our well deserved long break!';
+        });
+        setupTimer(globals.globalBreakTimer * 3);
+      } else {
+        setState(() {
+          breakText = 'Take a short break!';
+        });
+        setupTimer(globals.globalBreakTimer);
+      }
     }
   }
 
@@ -445,35 +462,26 @@ class _HomeState extends State<Home> {
         padding: EdgeInsets.symmetric(horizontal: 10),
         child: Opacity(
           opacity: 0.7,
-          child: (globals.isRunning == false)
-              ? AutoSizeText(
-                  (globals.index == 0) ? pomodoroText : breakText,
-                  style: TextStyle(
-                    color: Theme.of(context).textSelectionColor,
-                    fontSize: 50,
-                  ),
-                  maxLines: 1,
-                )
-              : AutoSizeText(
-                  (globals.index == 0) ? pomodoroText : breakText,
-                  style: TextStyle(
-                    color: Theme.of(context).textSelectionColor,
-                    fontSize: 50,
-                  ),
-                  maxLines: 1,
-                  wrapWords: false,
-                  textAlign: TextAlign.center,
-                  overflowReplacement: AutoSizeText(
-                    (globals.index == 0) ? pomodoroText : breakText,
-                    style: TextStyle(
-                      color: Theme.of(context).textSelectionColor,
-                      fontSize: 50,
-                    ),
-                    maxLines: 3,
-                    wrapWords: false,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+          child: AutoSizeText(
+            (globals.index == 0) ? pomodoroText : breakText,
+            style: TextStyle(
+              color: Theme.of(context).textSelectionColor,
+              fontSize: 30,
+            ),
+            maxLines: 1,
+            wrapWords: true,
+            textAlign: TextAlign.center,
+            overflowReplacement: AutoSizeText(
+              (globals.index == 0) ? pomodoroText : breakText,
+              style: TextStyle(
+                color: Theme.of(context).textSelectionColor,
+                fontSize: 30,
+              ),
+              maxLines: 3,
+              wrapWords: false,
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
       ),
     );

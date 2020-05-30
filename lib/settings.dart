@@ -269,7 +269,15 @@ class _SettingsState extends State<Settings> {
         bMinute = breakTimer.inMinutes % 60;
         _setBreakTimer(bHour, bMinute);
         globals.globalBreakTimer = breakTimer.inSeconds;
-        widget.setupBreakTimer(globals.globalBreakTimer);
+        if (globals.isRunning == false) {
+          if (globals.longBreakCounter % 4 == 0 &&
+              globals.longBreakCounter != 0) {
+            widget.setupTimer(globals.globalBreakTimer * 3);
+          } else {
+            widget.setupBreakTimer(globals.globalBreakTimer);
+          }
+        }
+
         print("hopefully change the break timer by now : " +
             globals.globalBreakTimer.toString());
         Navigator.of(context).pop();
