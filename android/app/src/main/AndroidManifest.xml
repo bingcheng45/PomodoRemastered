@@ -6,7 +6,7 @@
          FlutterApplication and put your custom class here. -->
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.VIBRATE" />
-  <application android:name="io.flutter.app.FlutterApplication" android:label="pomodororemastered" android:icon="@drawable/app_icon">
+  <application android:name="io.flutter.app.FlutterApplication" android:label="Simple Pomodoro" android:icon="@drawable/app_icon">
   <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/notification_logo" />
