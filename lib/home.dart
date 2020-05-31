@@ -305,7 +305,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   //start the countdown timer
   void startTimer() {
     countDownTimer = new CountdownTimer(
-      new Duration(seconds: 10), //TODO: change timer settings _start
+      new Duration(seconds: _start), //TODO: change timer settings _start
       new Duration(seconds: 1),
     );
 
@@ -511,7 +511,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               globals.longBreakCounter != 0) {
             //this is the 4th and completed pomodoro
             hideQuaterImages();
-            explodeNow(); //TODO remove this
+            if (globals.index == 1) {
+              explodeNow(); 
+            }
           } else {
             hideQuaterImages();
           }

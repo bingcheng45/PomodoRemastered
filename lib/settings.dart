@@ -1,7 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:pomodororemastered/global.dart' as globals;
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 
 class Settings extends StatefulWidget {
@@ -112,7 +112,7 @@ class _SettingsState extends State<Settings> {
                 child: CupertinoTimerPicker(
                   initialTimerDuration:
                       Duration(hours: wHour, minutes: wMinute),
-                  minuteInterval: 5, 
+                  minuteInterval: 5,
                   backgroundColor: Colors.white,
                   mode: CupertinoTimerPickerMode.hm,
                   onTimerDurationChanged: (value) {
@@ -191,7 +191,7 @@ class _SettingsState extends State<Settings> {
                         //_opacityB = 0;
                         isZero = false;
                         breakText =
-                            'After 4 pomodoro it will be a long break that is ${(value.inSeconds * 3) ~/ 3600}hour ${beautifyNumber((value.inMinutes * 3) % 60)}minute.';
+                            'After 4 pomodoro it will be a long break that is ${(value.inSeconds * 3) ~/ 3600} hour ${beautifyNumber((value.inMinutes * 3) % 60)} minute.';
                         breakTextColor = Colors.black;
                       }
                     });
@@ -201,13 +201,17 @@ class _SettingsState extends State<Settings> {
               Opacity(
                 opacity: _opacityB,
                 child: Container(
-                  padding:
-                      EdgeInsets.only(top: 10, bottom: 0, left: 15, right: 15),
-                  child: AutoSizeText(
-                    breakText,
-                    style: TextStyle(color: breakTextColor, fontSize: 20),
-                    maxLines: 2,
-                    maxFontSize: 14,
+                  width: 1000,
+                  height: 50,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        top: 10, bottom: 0, left: 15, right: 15),
+                    child: AutoSizeText(
+                      breakText,
+                      style: TextStyle(color: breakTextColor, fontSize: 14),
+                      maxLines: 2,
+                      maxFontSize: 20,
+                    ),
                   ),
                 ),
               ),
@@ -286,12 +290,10 @@ class _SettingsState extends State<Settings> {
 
   Widget editWorkTimer() {
     return ListTile(
-      title: FittedBox(
-        child: Text(
-          "Curent Duration:",
-          style: TextStyle(
-            fontSize: 20,
-          ),
+      title: Text(
+        "Curent Duration:",
+        style: TextStyle(
+          fontSize: 20,
         ),
       ),
       trailing: FittedBox(
@@ -337,12 +339,10 @@ class _SettingsState extends State<Settings> {
   //break timer
   Widget editBreakTimer() {
     return ListTile(
-      title: FittedBox(
-        child: Text(
-          "Curent Duration:",
-          style: TextStyle(
-            fontSize: 20,
-          ),
+      title: Text(
+        "Curent Duration:",
+        style: TextStyle(
+          fontSize: 20,
         ),
       ),
       trailing: FittedBox(
