@@ -401,43 +401,46 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         child: InkWell(
           splashColor: Colors.white54,
           onTap: () {
-            if (globals.isRunning == false) {
-              if (globals.index == 0) {
-                _showNotification(globals.globalTimer, 'Time for your break.');
-              } else {
-                _showNotification(globals.globalBreakTimer, 'Break is over!');
-              }
-              startTimer();
-              setState(() {
-                globals.isRunning = true;
-                updateQuaterVisibility(); //TODO: make the quater have animations
-                _btmTextVisible = !_btmTextVisible;
-                print('non delayed $_btmTextVisible');
-                pomodoroText = '';
-                breakText = '';
-                Future.delayed(const Duration(milliseconds: 1000), () {
-                  setState(() {
-                    _btmTextVisible = !_btmTextVisible;
-                    if (globals.index == 0) {
-                      if (globals.isRunning == false) {
-                        pomodoroText = 'Tap to begin';
-                      } else {
-                        pomodoroText = generateWorkText();
-                      }
-                    } else {
-                      if (globals.isRunning == false) {
-                        breakText = 'Take a short break!';
-                      } else {
-                        breakText = 'Enjoy your well deserved break!';
-                      }
-                    }
-                  });
-                });
-                if (!firstTap) {
-                  firstTap = !firstTap; //change first tap to true if false.
+            try {
+              if (globals.isRunning == false) {
+                if (globals.index == 0) {
+                  _showNotification(
+                      globals.globalTimer, 'Time for your break.');
+                } else {
+                  _showNotification(globals.globalBreakTimer, 'Break is over!');
                 }
-              });
-            }
+                startTimer();
+                setState(() {
+                  globals.isRunning = true;
+                  updateQuaterVisibility(); //TODO: make the quater have animations
+                  _btmTextVisible = !_btmTextVisible;
+                  print('non delayed $_btmTextVisible');
+                  pomodoroText = '';
+                  breakText = '';
+                  Future.delayed(const Duration(milliseconds: 1000), () {
+                    setState(() {
+                      _btmTextVisible = !_btmTextVisible;
+                      if (globals.index == 0) {
+                        if (globals.isRunning == false) {
+                          pomodoroText = 'Tap to begin';
+                        } else {
+                          pomodoroText = generateWorkText();
+                        }
+                      } else {
+                        if (globals.isRunning == false) {
+                          breakText = 'Take a short break!';
+                        } else {
+                          breakText = 'Enjoy your well deserved break!';
+                        }
+                      }
+                    });
+                  });
+                  if (!firstTap) {
+                    firstTap = !firstTap; //change first tap to true if false.
+                  }
+                });
+              }
+            } catch (err) {}
           },
           child: Container(
             height: height,
@@ -512,7 +515,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             //this is the 4th and completed pomodoro
             hideQuaterImages();
             if (globals.index == 1) {
-              explodeNow(); 
+              explodeNow();
             }
           } else {
             hideQuaterImages();

@@ -291,7 +291,7 @@ class _SettingsState extends State<Settings> {
   Widget editWorkTimer() {
     return ListTile(
       title: Text(
-        "Curent Duration:",
+        "Current Duration:",
         style: TextStyle(
           fontSize: 20,
         ),
@@ -340,7 +340,7 @@ class _SettingsState extends State<Settings> {
   Widget editBreakTimer() {
     return ListTile(
       title: Text(
-        "Curent Duration:",
+        "Current Duration:",
         style: TextStyle(
           fontSize: 20,
         ),
