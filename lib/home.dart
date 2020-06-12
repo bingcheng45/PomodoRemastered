@@ -406,7 +406,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               if (globals.isRunning == false) {
                 if (globals.index == 0) {
                   _showNotification(
-                      10, 'Time for your break.');
+                      globals.globalTimer, 'Time for your break.');
                 } else {
                   _showNotification(globals.globalBreakTimer, 'Break is over!');
                 }
