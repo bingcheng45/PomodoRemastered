@@ -88,8 +88,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'channel_ID', 'channel name', 'channel description',
         importance: Importance.Max,
-        priority: Priority.High,
+        priority: Priority.Max,
         icon: null,
+        sound: RawResourceAndroidNotificationSound('that_was_quick'),
         color: Colors.red,
         enableVibration: true,
         playSound: true,
@@ -405,7 +406,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               if (globals.isRunning == false) {
                 if (globals.index == 0) {
                   _showNotification(
-                      globals.globalTimer, 'Time for your break.');
+                      10, 'Time for your break.');
                 } else {
                   _showNotification(globals.globalBreakTimer, 'Break is over!');
                 }
