@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ import 'package:quiver/async.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:audioplayer/audioplayer.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -44,6 +47,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   double explodeWidth = 10;
   double explodeHeight = 10;
   double explodePadding = 16;
+  String endOfTimer;
+  AudioPlayer audioPlugin = AudioPlayer();
 
   List workList = [
     'I work hard because I love my work. ~ Bill Gates, Microsoft co-founder',
@@ -84,7 +89,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Future<void> _demoNotification2(int totalSeconds, String text) async {
     var scheduledNotificationDateTime =
-        DateTime.now().add(Duration(seconds: totalSeconds));
+        DateTime.now().add(Duration(seconds: 10));
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'channel_ID', 'channel name', 'channel description',
         importance: Importance.Max,
@@ -143,6 +148,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
     );
 
+    _load('that_was_quick.mp3', 'endOfTimer');
+
+
     initializationSettingsAndroid =
         AndroidInitializationSettings('notification_logo');
     initializationSettingsIOS = new IOSInitializationSettings(
@@ -153,6 +161,23 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         onSelectNotification: onSelectNotification);
 
     //Timer.periodic(Duration(seconds: 1), (Timer t) => _setTime());//runs forever
+  }
+
+  Future<Null> _load(String filename, String soundType) async {
+    final ByteData data = await rootBundle.load('assets/$filename');
+    Directory tempDir = await getTemporaryDirectory();
+    File tempFile = File('${tempDir.path}/$filename');
+    await tempFile.writeAsBytes(data.buffer.asUint8List(), flush: true);
+
+    if (soundType == 'endOfTimer') {
+      endOfTimer = tempFile.uri.toString();
+    }
+  }
+
+  void _playSound(String soundName) {
+    if (endOfTimer != null && soundName == 'endOfTimer') {
+      audioPlugin.play(endOfTimer, isLocal: true);
+    } 
   }
 
   Future onSelectNotification(String payload) async {
@@ -328,7 +353,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           globals.longBreakCounter++;
         });
       }
-
+      _playSound('endOfTimer');
       onFinished();
       sub.cancel();
       SystemChrome.setSystemUIOverlayStyle(

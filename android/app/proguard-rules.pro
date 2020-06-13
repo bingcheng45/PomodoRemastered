@@ -33,3 +33,6 @@
 
 ## flutter_local_notification plugin rules
 -keep class com.dexterous.** { *; }
+
+## flutter audio player plugin rules
+-keep class bz.rxla.** { *; }
