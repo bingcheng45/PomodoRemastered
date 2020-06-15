@@ -88,39 +88,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     await _demoNotification2(totalSeconds, text);
     //await _scheduleNotification();
   }
-
-  //testing local notification
-  // Future<void> _scheduleNotification() async {
-  //   var scheduledNotificationDateTime =
-  //       DateTime.now().add(Duration(seconds: 5));
-  //   var vibrationPattern = Int64List(4);
-  //   vibrationPattern[0] = 0;
-  //   vibrationPattern[1] = 1000;
-  //   vibrationPattern[2] = 5000;
-  //   vibrationPattern[3] = 2000;
-
-  //   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-  //       'your other channel id',
-  //       'your other channel name',
-  //       'your other channel description',
-  //       icon: null,
-  //       sound: RawResourceAndroidNotificationSound('that_was_quick'),
-  //       vibrationPattern: vibrationPattern,
-  //       enableLights: true,
-  //       color: const Color.fromARGB(255, 255, 0, 0),
-  //       ledColor: const Color.fromARGB(255, 255, 0, 0),
-  //       ledOnMs: 1000,
-  //       ledOffMs: 500);
-  //   var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-  //   var platformChannelSpecifics = NotificationDetails(
-  //       androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-  //   await flutterLocalNotificationsPlugin.schedule(
-  //       0,
-  //       'scheduled title',
-  //       'scheduled body',
-  //       scheduledNotificationDateTime,
-  //       platformChannelSpecifics);
-  // }
+  
 
   Future<void> _demoNotification2(int totalSeconds, String text) async {
     var scheduledNotificationDateTime =
