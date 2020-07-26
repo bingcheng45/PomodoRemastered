@@ -15,42 +15,44 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayer/audioplayer.dart';
 import 'package:path_provider/path_provider.dart';
 
+final Duration animationDuration = Duration(milliseconds: 300);
+final Duration delay = Duration(milliseconds: 300);
+GlobalKey rectGetterKey = RectGetter.createGlobalKey();
+Rect rect;
+String pomodoroText = 'Tap to begin';
+String breakText = 'Take a short break!';
+bool _btmTextVisible = true;
+int minute = 0;
+int seconds = 0;
+int _start = 0;
+int _current = 0;
+bool firstTap = false;
+CountdownTimer countDownTimer;
+final hKeyW = 'hour_key_work';
+final mKeyW = 'minute_key_work';
+final hKeyB = 'hour_key_break';
+final mKeyB = 'minute_key_break';
+final cKey = 'completed_pomodoros';
+bool quater1Opacity = false;
+bool quater2Opacity = false;
+bool quater3Opacity = false;
+bool quater4Opacity = false;
+double imageSize = 10;
+bool explode = false;
+double explodeWidth = 10;
+double explodeHeight = 10;
+double explodePadding = 16;
+String endOfTimer;
+AudioPlayer audioPlugin = AudioPlayer();
+var timerObj;
+
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> with TickerProviderStateMixin {
-  final Duration animationDuration = Duration(milliseconds: 300);
-  final Duration delay = Duration(milliseconds: 300);
-  GlobalKey rectGetterKey = RectGetter.createGlobalKey();
-  Rect rect;
-  String pomodoroText = 'Tap to begin';
-  String breakText = 'Take a short break!';
-  bool _btmTextVisible = true;
-  int minute = 0;
-  int seconds = 0;
-  int _start = 0;
-  int _current = 0;
-  bool firstTap = false;
-  CountdownTimer countDownTimer;
-  final hKeyW = 'hour_key_work';
-  final mKeyW = 'minute_key_work';
-  final hKeyB = 'hour_key_break';
-  final mKeyB = 'minute_key_break';
-  final cKey = 'completed_pomodoros';
-  bool quater1Opacity = false;
-  bool quater2Opacity = false;
-  bool quater3Opacity = false;
-  bool quater4Opacity = false;
-  double imageSize = 10;
-  bool explode = false;
-  double explodeWidth = 10;
-  double explodeHeight = 10;
-  double explodePadding = 16;
-  String endOfTimer;
-  AudioPlayer audioPlugin = AudioPlayer();
-
+class _HomeState extends State<Home>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   List workList = [
     'I work hard because I love my work. ~ Bill Gates, Microsoft co-founder',
     'I do not know anyone who has got to the top without hard work. That is the recipe. It will not always get you to the top, but should get you pretty near. ~ Margaret Thatcher, Former UK Prime Minister',
@@ -88,7 +90,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     await _demoNotification2(totalSeconds, text);
     //await _scheduleNotification();
   }
-  
 
   Future<void> _demoNotification2(int totalSeconds, String text) async {
     var scheduledNotificationDateTime =
@@ -110,28 +111,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         scheduledNotificationDateTime, platformChannelSpecifics);
   }
 
-  // Future<void> _demoNotification() async {
-  //   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-  //       'channel_ID', 'channel name', 'channel description',
-  //       importance: Importance.Max,
-  //       priority: Priority.High,
-  //       ticker: 'test ticker');
-
-  //   var iOSChannelSpecifics = IOSNotificationDetails();
-  //   var platformChannelSpecifics = NotificationDetails(
-  //       androidPlatformChannelSpecifics, iOSChannelSpecifics);
-
-  //   await flutterLocalNotificationsPlugin.show(0, 'Hello, buddy',
-  //       'A message from flutter buddy', platformChannelSpecifics,
-  //       payload: 'test oayload');
-  // }
-
-  //end of notification
-
   @override
   void initState() {
     super.initState();
-    //globals.globalTimer = _totalSeconds; //set global timer to shared pref timer
+    WidgetsBinding.instance.addObserver(this);
     _getWorkTimer().then((list) {
       setState(() {
         globals.globalTimer =
@@ -146,6 +129,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         setupBreakTimer(globals.globalBreakTimer);
       });
     });
+
     //worktime
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(statusBarColor: globals.bgColor[globals.index]),
@@ -161,8 +145,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         initializationSettingsAndroid, initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: onSelectNotification);
+  }
 
-    //Timer.periodic(Duration(seconds: 1), (Timer t) => _setTime());//runs forever
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<Null> _load(String filename, String soundType) async {
@@ -259,6 +247,40 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     return num < 10 ? '0$num' : '$num';
   }
 
+  //TODO: resume
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("APP_STATE: $state");
+    if (state == AppLifecycleState.resumed) {
+      Duration secondsRemaining = globals.endTimer.difference(DateTime.now());
+      // user returned to our app
+      if (globals.endTimer != null && globals.checkEndTimer && _current > 0) {
+        setState(() {
+          _current = secondsRemaining.inSeconds;
+        });
+        print("current time is $_current");
+        startTimer(_current);
+        globals.checkEndTimer = false;
+      }
+      print("flutter is resumed");
+    } else if (state == AppLifecycleState.inactive) {
+      // app is inactive
+      print("flutter is inactive");
+    } else if (state == AppLifecycleState.paused) {
+      if (timerObj != null) {
+        timerObj.cancel();
+        if(globals.isRunning == true){
+          globals.checkEndTimer = true;
+        }
+      }
+      // user is about quit our app temporally
+      print("flutter is paused");
+    } else if (state == AppLifecycleState.detached) {
+      // The application is still hosted on a flutter engine but is detached from any host views.
+      print("flutter is detached");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -280,7 +302,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   Widget explodeOnFourthCompleted() {
-    //TODO: Explode animation
     return Positioned(
       left: 0,
       child: Center(
@@ -328,12 +349,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   //background color end
 
-  //timerobject start
-  var timerObj;
   //start the countdown timer
-  void startTimer() {
+  void startTimer(int start) {
     countDownTimer = new CountdownTimer(
-      new Duration(seconds: _start), //TODO: change timer settings _start
+      new Duration(seconds: start), 
       new Duration(seconds: 1),
     );
 
@@ -341,7 +360,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     sub.onData((duration) {
       setState(() {
         globals.isRunning = true;
-        _current = _start - duration.elapsed.inSeconds;
+        _current = start - duration.elapsed.inSeconds;
         seconds = _current;
         minute = _current;
       });
@@ -355,7 +374,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           globals.longBreakCounter++;
         });
       }
-      _playSound('endOfTimer');
+      _playSound('endOfTimer');//TODO: see if need remove playsound
       onFinished();
       sub.cancel();
       SystemChrome.setSystemUIOverlayStyle(
@@ -381,6 +400,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       firstTap = false;
     });
 
+    //await Workmanager.cancelAll();
+
     if (globals.index == 0) {
       //pomodoro timer
       setupTimer(globals.globalTimer);
@@ -402,6 +423,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   //timer object end
+
+  //TODO: set end timer
+  void setEndTimer() {
+    var endTime = DateTime.now().add(Duration(seconds: _current));
+    print(endTime.toString());
+    globals.endTimer = endTime;
+  }
 
   //text display start
 
@@ -429,6 +457,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         child: InkWell(
           splashColor: Colors.white54,
           onTap: () {
+            //TODO: on tap function to run on background
             try {
               if (globals.isRunning == false) {
                 if (globals.index == 0) {
@@ -437,10 +466,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 } else {
                   _showNotification(globals.globalBreakTimer, 'Break is over!');
                 }
-                startTimer();
+                setEndTimer();
+                startTimer(_start);
                 setState(() {
                   globals.isRunning = true;
-                  updateQuaterVisibility(); //TODO: make the quater have animations
+                  updateQuaterVisibility();
                   _btmTextVisible = !_btmTextVisible;
                   print('non delayed $_btmTextVisible');
                   pomodoroText = '';
@@ -502,7 +532,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   void explodeNow() {
-    //TODO: explodenow
     setState(() {
       explodeWidth = MediaQuery.of(context).size.height * 0.5;
       explodeHeight = MediaQuery.of(context).size.height * 0.5;
@@ -532,7 +561,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     });
   }
 
-  //TODO: update quater visibility
   void updateQuaterVisibility() {
     setState(() {
       Timer.periodic(const Duration(milliseconds: 1000), (timer) {
@@ -583,13 +611,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               quater4Opacity = !quater4Opacity;
             });
           }
-
-          // quater1Opacity = !quater1Opacity;
-          // quater2Opacity = !quater2Opacity;
-          // quater3Opacity = !quater3Opacity;
-          // quater4Opacity = !quater4Opacity;
-          print(
-              'outside cancel $quater1Opacity long break is ${globals.longBreakCounter}');
         }
       });
     });
@@ -701,7 +722,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               children: <Widget>[
                 Row(
                   children: <Widget>[
-                    //TODO: quater images
                     AnimatedOpacity(
                       opacity: quater4Opacity ? 1.0 : 0.0,
                       duration: Duration(milliseconds: 500),

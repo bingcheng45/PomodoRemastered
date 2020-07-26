@@ -112,7 +112,7 @@ class _SettingsState extends State<Settings> {
                 child: CupertinoTimerPicker(
                   initialTimerDuration:
                       Duration(hours: wHour, minutes: wMinute),
-                  minuteInterval: 5,
+                  minuteInterval: 1, //TODO: change back to 5
                   backgroundColor: Colors.white,
                   mode: CupertinoTimerPickerMode.hm,
                   onTimerDurationChanged: (value) {
