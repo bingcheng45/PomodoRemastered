@@ -262,6 +262,16 @@ class _HomeState extends State<Home>
         startTimer(_current);
         globals.checkEndTimer = false;
       }
+      setState(() {
+        if (_current > 0) {
+          seconds = _current;
+          minute = _current;
+        } else {
+          seconds = 0;
+          minute = 0;
+        }
+      });
+
       print("flutter is resumed");
     } else if (state == AppLifecycleState.inactive) {
       // app is inactive
@@ -269,7 +279,7 @@ class _HomeState extends State<Home>
     } else if (state == AppLifecycleState.paused) {
       if (timerObj != null) {
         timerObj.cancel();
-        if(globals.isRunning == true){
+        if (globals.isRunning == true) {
           globals.checkEndTimer = true;
         }
       }
@@ -352,7 +362,7 @@ class _HomeState extends State<Home>
   //start the countdown timer
   void startTimer(int start) {
     countDownTimer = new CountdownTimer(
-      new Duration(seconds: start), 
+      new Duration(seconds: start),
       new Duration(seconds: 1),
     );
 
@@ -374,7 +384,7 @@ class _HomeState extends State<Home>
           globals.longBreakCounter++;
         });
       }
-      _playSound('endOfTimer');//TODO: see if need remove playsound
+      _playSound('endOfTimer'); //TODO: see if need remove playsound
       onFinished();
       sub.cancel();
       SystemChrome.setSystemUIOverlayStyle(
@@ -464,12 +474,14 @@ class _HomeState extends State<Home>
                   _showNotification(
                       globals.globalTimer, 'Time for your break.');
                 } else {
-                  if (globals.longBreakCounter % 4 == 0 && globals.longBreakCounter != 0) {
-                    _showNotification(globals.globalBreakTimer * 3, ' Long break is over!');
-                  }else{
-                    _showNotification(globals.globalBreakTimer, 'Break is over!');
+                  if (globals.longBreakCounter % 4 == 0 &&
+                      globals.longBreakCounter != 0) {
+                    _showNotification(
+                        globals.globalBreakTimer * 3, ' Long break is over!');
+                  } else {
+                    _showNotification(
+                        globals.globalBreakTimer, 'Break is over!');
                   }
-                  
                 }
                 setEndTimer();
                 startTimer(_start);
