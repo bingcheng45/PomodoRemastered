@@ -464,7 +464,12 @@ class _HomeState extends State<Home>
                   _showNotification(
                       globals.globalTimer, 'Time for your break.');
                 } else {
-                  _showNotification(globals.globalBreakTimer, 'Break is over!');
+                  if (globals.longBreakCounter % 4 == 0 && globals.longBreakCounter != 0) {
+                    _showNotification(globals.globalBreakTimer * 3, ' Long break is over!');
+                  }else{
+                    _showNotification(globals.globalBreakTimer, 'Break is over!');
+                  }
+                  
                 }
                 setEndTimer();
                 startTimer(_start);
